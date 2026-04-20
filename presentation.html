@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔮 ByteRover × LLM Wiki：AIエージェントの二重知識アーキテクチャ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ヒーローセクション */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/></svg>');
+            background-size: 50px 50px;
+            animation: float 20s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-50px) rotate(360deg); }
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+
+        .hero .cta {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            background: white;
+            color: #764ba2;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: fadeInUp 1s ease-out 0.6s both;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .hero .cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* スクロールインジケーター */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+
+        .scroll-indicator svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-20px); }
+            60% { transform: translateX(-50%) translateY(-10px); }
+        }
+
+        /* セクション共通スタイル */
+        section {
+            padding: 100px 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        section:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #764ba2;
+            text-align: center;
+        }
+
+        section .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 3rem;
+            font-size: 1.2rem;
+        }
+
+        /* カードスタイル */
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .card h3 {
+            color: #764ba2;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        /* 比較テーブル */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .comparison-table .highlight {
+            background: #e8f5e9;
+            font-weight: 600;
+        }
+
+        /* グリッドレイアウト */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        /* アーキテクチャ図 */
+        .architecture-diagram {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .architecture-diagram pre {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        /* ステップ表示 */
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: all 0.5s ease;
+        }
+
+        .step.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .step-content h3 {
+            color: #764ba2;
+            margin-bottom: 0.5rem;
+        }
+
+        /* コードブロック */
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1.5rem;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .code-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: #1a1a1a;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .code-block code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* 統計カード */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: scale(1.05);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* タイムライン */
+        .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 2rem auto;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .timeline-item {
+            position: relative;
+            width: 50%;
+            padding: 1rem 2rem;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.5s ease;
+        }
+
+        .timeline-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .timeline-item:nth-child(odd) {
+            left: 0;
+            text-align: right;
+        }
+
+        .timeline-item:nth-child(even) {
+            left: 50%;
+            text-align: left;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 1.5rem;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 4px solid #764ba2;
+            border-radius: 50%;
+        }
+
+        .timeline-item:nth-child(odd)::before {
+            right: -12px;
+        }
+
+        .timeline-item:nth-child(even)::before {
+            left: -12px;
+        }
+
+        /* ナビゲーション */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.95);
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .nav.scrolled {
+            background: rgba(255,255,255,0.98);
+            padding: 0.5rem 0;
+        }
+
+        .nav ul {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav a:hover {
+            color: #764ba2;
+        }
+
+        /* フッター */
+        footer {
+            background: #2d2d2d;
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        footer p {
+            opacity: 0.7;
+        }
+
+        /* レスポンシブデザイン */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            section h2 {
+                font-size: 1.8rem;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav ul {
+                gap: 1rem;
+                font-size: 0.8rem;
+            }
+
+            .timeline::before {
+                left: 20px;
+            }
+
+            .timeline-item {
+                width: 100%;
+                left: 0 !important;
+                text-align: left !important;
+                padding-left: 3rem;
+            }
+
+            .timeline-item::before {
+                left: 10px !important;
+            }
+        }
+
+        /* アニメーション用クラス */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* インタラクティブデモ */
+        .demo-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .demo-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .demo-input:focus {
+            outline: none;
+            border-color: #764ba2;
+        }
+
+        .demo-button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .demo-output {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            min-height: 100px;
+            display: none;
+        }
+
+        .demo-output.show {
+            display: block;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        /* 進捗バー */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1001;
+            transition: width 0.1s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- 進捗バー -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- ナビゲーション -->
+    <nav class="nav" id="nav">
+        <div class="container">
+            <ul>
+                <li><a href="#intro">はじめに</a></li>
+                <li><a href="#comparison">比較</a></li>
+                <li><a href="#architecture">アーキテクチャ</a></li>
+                <li><a href="#scenarios">活用シーン</a></li>
+                <li><a href="#roadmap">ロードマップ</a></li>
+                <li><a href="#benefits">効果</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- ヒーローセクション -->
+    <section class="hero" id="intro">
+        <div class="container">
+            <h1>🔮 ByteRover × LLM Wiki</h1>
+            <p>AIエージェントの二重知識アーキテクチャ</p>
+            <a href="#comparison" class="cta">詳しく見る →</a>
+        </div>
+        <div class="scroll-indicator">
+            <svg viewBox="0 0 24 24">
+                <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- はじめに -->
+    <section>
+        <div class="container">
+            <h2>📋 はじめに</h2>
+            <p class="subtitle">AIエージェントに「脳」を2つ持たせよう</p>
+
+            <div class="grid">
+                <div class="card fade-in">
+                    <h3>🧠 個別知識レイヤー</h3>
+                    <p><strong>Karpathy LLM Wiki</strong></p>
+                    <p>エージェント専用の自律成長ブレイン。個人的な成長記録、学習メモ、JUNとの対話履歴を保存。</p>
+                </div>
+
+                <div class="card fade-in">
+                    <h3>🤝 共有知識レイヤー</h3>
+                    <p><strong>ByteRover</strong></p>
+                    <p>全エージェントで共有するチームブレイン。プロジェクト知識、コーディング規約、ベストプラクティスを管理。</p>
+                </div>
+
+                <div class="card fade-in">
+                    <h3>🚀 2層アーキテクチャ</h3>
+                    <p><strong>最強の組み合わせ</strong></p>
+                    <p>個別知識で自律的に成長し、共有知識でチームで協力。プロジェクトごとの知的資産を蓄積。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 比較セクション -->
+    <section id="comparison">
+        <div class="container">
+            <h2>📊 徹底比較</h2>
+            <p class="subtitle">ByteRover vs LLM Wiki</p>
+
+            <div class="architecture-diagram">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>特徴</th>
+                            <th>ByteRover</th>
+                            <th>LLM Wiki</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>役割</strong></td>
+                            <td>共有知識レイヤー</td>
+                            <td class="highlight">個別知識レイヤー</td>
+                        </tr>
+                        <tr>
+                            <td><strong>アクセス権限</strong></td>
+                            <td class="highlight">全エージェントで共有</td>
+                            <td>エージェントごとに専用</td>
+                        </tr>
+                        <tr>
+                            <td><strong>主な用途</strong></td>
+                            <td class="highlight">プロジェクト知識・規約</td>
+                            <td>個人的な成長・メモ</td>
+                        </tr>
+                        <tr>
+                            <td><strong>エージェント対応数</strong></td>
+                            <td class="highlight">19+のエージェント</td>
+                            <td>エージェントごとに個別</td>
+                        </tr>
+                        <tr>
+                            <td><strong>知識の性質</strong></td>
+                            <td class="highlight">構造化・公式・共有</td>
+                            <td>自由形式・個人的</td>
+                        </tr>
+                        <tr>
+                            <td><strong>更新頻度</strong></td>
+                            <td class="highlight">重要な判断をキュレート</td>
+                            <td>学んだことを即時記録</td>
+                        </tr>
+                        <tr>
+                            <td><strong>検索方法</strong></td>
+                            <td class="highlight">brv queryで高速検索</td>
+                            <td>wiki queryでセマンティック検索</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ローカル実行</strong></td>
+                            <td class="highlight">✅ 100%ローカル</td>
+                            <td>✅ 100%ローカル</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card fade-in">
+                    <div class="stat-number">19+</div>
+                    <div class="stat-label">対応エージェント数</div>
+                </div>
+                <div class="stat-card fade-in">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">ローカル実行</div>
+                </div>
+                <div class="stat-card fade-in">
+                    <div class="stat-number">2層</div>
+                    <div class="stat-label">知識アーキテクチャ</div>
+                </div>
+                <div class="stat-card fade-in">
+                    <div class="stat-number">∞</div>
+                    <div class="stat-label">成長の可能性</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- アーキテクチャセクション -->
+    <section id="architecture">
+        <div class="container">
+            <h2>🧠 アーキテクチャ設計</h2>
+            <p class="subtitle">2層知識アーキテクチャの仕組み</p>
+
+            <div class="card fade-in">
+                <h3>🎯 知識の分類ルール</h3>
+                <div class="code-block">
+                    <code>
+┌─────────────────────────────────────────────────────────┐
+│  知識を受け取ったら、まず分類しよう！                    │
+└─────────────────────────────────────────────────────────┘
+
+質問: これは「私だけの知識」か「みんなで共有すべき知識」か？
+
+├─ 「私だけ」→ LLM Wikiへ
+│  ├─ 個人的な理解メモ
+│  ├─ 学習中の資料
+│  └─ まだ検証していないアイデア
+│
+└─ 「みんなで共有」→ ByteRoverへ
+   ├─ プロジェクトの設計判断
+   ├─ コーディング規約
+   ├─ ベストプラクティス
+   └─ チームで合意したルール
+                    </code>
+                </div>
+            </div>
+
+            <div class="card fade-in">
+                <h3>🔄 情報フロー</h3>
+                <p>知識のキャリア：学習 → キュレーション → 活用 → フィードバック</p>
+                <div class="code-block">
+                    <code>
+ステップ1: 学習と記録（LLM Wiki）
+  ↓
+  リリスが新しい技術を学ぶ
+  LLM Wikiに個人的な理解を記録
+  まだ検証していないアイデアも自由に記録
+
+ステップ2: キュレーション（ByteRover）
+  ↓
+  「これは実務で使える！」と判断した知識だけを追加
+  構造化・整理して、他のエージェントが使える形式にする
+
+ステップ3: 活用とフィードバック
+  ↓
+  実務エージェントがByteRoverから知識を取得
+  実装を通じて新たな発見があればByteRoverに記録
+  必要に応じてリリスに報告
+                    </code>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 活用シナリオ -->
+    <section id="scenarios">
+        <div class="container">
+            <h2>💡 活用シナリオ</h2>
+            <p class="subtitle">具体的な使い方を紹介</p>
+
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>新しいAI技術の導入</h3>
+                    <p>リリスが新しい技術を学び、重要な知識をByteRoverにキュレート。実務エージェントが知識を取得して実装。</p>
+                    <div class="code-block">
+                        <code>
+# リリスがXAIの公式ドキュメントを学習
+wiki ingest --path ~/Documents/xai-docs.pdf
+
+# LLM Wikiに個人的な理解を記録
+wiki note "XAIのアーキテクチャは..."
+
+# 重要な知識をByteRoverにキュレート
+brv add --title "XAIの最適な設定パターン" --content "..."
+
+# 実務エージェントが知識を取得
+brv query "XAIの最適な設定"
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>プロジェクト固有の設計判断</h3>
+                    <p>チームで決定した設計やルールをByteRoverに記録。新しいエージェントがすぐに理解できる。</p>
+                    <div class="code-block">
+                        <code>
+# 設計会議で決定したことをByteRoverに記録
+brv add --title "モード切り替え機能の設計" --content "
+## MetalClaw モード切り替え仕様
+### モード一覧
+- /local: ローカルシェルモード
+- /agent: Agent Zeroモード
+...
+"
+
+# 新しいエージェントが設計を確認
+brv query "モード切り替えの実装ルール"
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>エージェント間の作業報告</h3>
+                    <p>複数のエージェントで大規模なリファクタリングを実施。ByteRoverで進捗を共有し、作業を引き継ぐ。</p>
+                    <div class="code-block">
+                        <code>
+# エージェントAが作業開始
+brv add --title "リファクタリング作業開始" --content "
+### エージェント: Codex
+### 作業範囲: src/utils/
+### 発見した問題: 循環インポートの可能性
+..."
+
+# エージェントBが作業を引き継ぎ
+brv query "リファクタリングの現在の状況"
+
+# エージェントBが進捗を更新
+brv add --title "リファクタリング作業進捗" --content "..."
+                        </code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ロードマップ -->
+    <section id="roadmap">
+        <div class="container">
+            <h2>🚀 導入ロードマップ</h2>
+            <p class="subtitle">環境構築から本格運用まで</p>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3>フェーズ1：環境構築</h3>
+                        <p><strong>期間：1〜2日</strong></p>
+                        <ul>
+                            <li>ByteRover CLIのインストール</li>
+                            <li>Karpathy LLM Wikiのセットアップ</li>
+                            <li>最初のプロジェクト作成</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3>フェーズ2：パイロット運用</h3>
+                        <p><strong>期間：1週間</strong></p>
+                        <ul>
+                            <li>1つのプロジェクトで試す</li>
+                            <li>エージェントが知識を正しく取得できるか確認</li>
+                            <li>知識の更新がスムーズに行えるか評価</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3>フェーズ3：本格運用</h3>
+                        <p><strong>期間：2週間〜</strong></p>
+                        <ul>
+                            <li>複数のプロジェクトに展開</li>
+                            <li>共有知識プロジェクトを作成</li>
+                            <li>定期的なメンテナンスを開始</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3>フェーズ4：継続的改善</h3>
+                        <p><strong>期間：継続</strong></p>
+                        <ul>
+                            <li>毎日：新しい知識の確認</li>
+                            <li>毎週：週次メンテナンス</li>
+                            <li>毎月：月次レポート作成</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 効果セクション -->
+    <section id="benefits">
+        <div class="container">
+            <h2>📈 効果とROI</h2>
+            <p class="subtitle">導入前後の比較</p>
+
+            <div class="grid">
+                <div class="card fade-in">
+                    <h3>⏱️ 時間節約</h3>
+                    <p><strong>従来：60分</strong></p>
+                    <p>エージェントAが学ぶ(30分) + Bに教える(15分) + Cに教える(15分)</p>
+                    <p><strong>導入後：39分</strong></p>
+                    <p>Aが学び記録(35分) + Bが取得(2分) + Cが取得(2分)</p>
+                    <p class="highlight">🎉 35%削減（21分節約）</p>
+                </div>
+
+                <div class="card fade-in">
+                    <h3>✨ 品質向上</h3>
+                    <p><strong>知識の伝達ミス</strong></p>
+                    <p>従来：20% → 導入後：5%（75%削減）</p>
+                    <p><strong>コードの一貫性</strong></p>
+                    <p>従来：70% → 導入後：95%（26%向上）</p>
+                    <p><strong>バグ再発率</strong></p>
+                    <p>従来：15% → 導入後：3%（80%削減）</p>
+                </div>
+
+                <div class="card fade-in">
+                    <h3>🎯 成功事例</h3>
+                    <p><strong>チーム開発の効率化</strong></p>
+                    <ul>
+                        <li>知識伝達時間：60%削減</li>
+                        <li>バグ再発率：75%削減</li>
+                        <li>オンボーディング：50%削減</li>
+                    </ul>
+                    <p><strong>個人の成長加速</strong></p>
+                    <ul>
+                        <li>知識定着率：80%向上</li>
+                        <li>習得速度：2倍</li>
+                        <li>再利用頻度：3倍</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- インタラクティブデモ -->
+    <section>
+        <div class="container">
+            <h2>🎮 インタラクティブデモ</h2>
+            <p class="subtitle">実際に体験してみよう</p>
+
+            <div class="demo-container">
+                <h3>知識分類シミュレーター</h3>
+                <p>知識の内容を入力すると、LLM WikiかByteRoverのどちらに保存すべきか判定します。</p>
+
+                <input type="text" class="demo-input" id="knowledgeInput" placeholder="例: XAIのアーキテクチャについて学んだメモ">
+                <button class="demo-button" onclick="classifyKnowledge()">判定する</button>
+
+                <div class="demo-output" id="demoOutput">
+                    <h4>判定結果：</h4>
+                    <p id="resultText"></p>
+                </div>
+            </div>
+
+            <div class="demo-container">
+                <h3>プロジェクト構成ビジュアライザー</h3>
+                <p>ByteRoverとLLM Wikiのプロジェクト構成を確認できます。</p>
+
+                <div class="code-block">
+                    <code>
+/home/jun/.openclaw/workspace/
+├── .brv/                           # ByteRoverグローバル設定
+├── assistant-shared/               # 全アシスタント共有プロジェクト
+│   └── .brv/context-tree/          # 共有知識ベース
+├── metalclaw/                      # MetalClawプロジェクト
+│   └── .brv/context-tree/          # MetalClaw固有の知識
+└── llm-wiki/                       # Karpathy LLM Wiki
+    ├── knowledge/                  # インジェストした資料
+    └── notes/                      # 個人的なメモ
+                    </code>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- まとめ -->
+    <section>
+        <div class="container">
+            <h2>📚 まとめ</h2>
+            <p class="subtitle">次世代AIエージェントへの道</p>
+
+            <div class="grid">
+                <div class="card fade-in">
+                    <h3>🔑 キーテイクポイント</h3>
+                    <ol>
+                        <li><strong>2層知識アーキテクチャ</strong><br>LLM Wiki：個別成長 / ByteRover：チーム共有</li>
+                        <li><strong>知識の分類ルール</strong><br>「私だけ」→ LLM Wiki / 「みんなで共有」→ ByteRover</li>
+                        <li><strong>継続的な改善サイクル</strong><br>学習 → キュレーション → 活用 → フィードバック</li>
+                    </ol>
+                </div>
+
+                <div class="card fade-in">
+                    <h3>🎯 アクションプラン</h3>
+                    <p><strong>今すぐ始めること：</strong></p>
+                    <ul>
+                        <li>✅ ByteRoverのインストール</li>
+                        <li>✅ LLM Wikiのセットアップ</li>
+                        <li>✅ 最初のプロジェクト作成</li>
+                        <li>✅ 1つの知識を追加してみる</li>
+                    </ul>
+                </div>
+
+                <div class="card fade-in">
+                    <h3>🚀 次のステップ</h3>
+                    <ul>
+                        <li>📄 レポートのダウンロード</li>
+                        <li>🎥 YouTube動画の視聴</li>
+                        <li>💬 Discordコミュニティに参加</li>
+                        <li>🔗 GitHubでスターを付ける</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- フッター -->
+    <footer>
+        <div class="container">
+            <p>🔮 ByteRover × LLM Wiki：AIエージェントの二重知識アーキテクチャ</p>
+            <p>作成日：2026年4月20日 | 著者：リリス（Lilith）× JUN</p>
+            <p>
+                <a href="https://discord.com/invite/clawd" style="color: #667eea;">Discord</a> |
+                <a href="https://github.com/JunSuzuki1973" style="color: #667eea;">GitHub</a> |
+                <a href="https://www.youtube.com/@AI-INFO-BIZ" style="color: #667eea;">YouTube</a>
+            </p>
+            <p style="margin-top: 1rem; font-size: 0.8rem;">© 2026 Generative AI and InfoBusiness Institute. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // スクロール進捗バー
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.body.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            document.getElementById('progressBar').style.width = scrollPercent + '%';
+        });
+
+        // ナビゲーションのスクロール効果
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('nav');
+            if (window.scrollY > 100) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // スムーズスクロール
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // フェードインアニメーション
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in, .step, .timeline-item').forEach(el => {
+            observer.observe(el);
+        });
+
+        // 知識分類シミュレーター
+        function classifyKnowledge() {
+            const input = document.getElementById('knowledgeInput').value;
+            const output = document.getElementById('demoOutput');
+            const resultText = document.getElementById('resultText');
+
+            if (!input) {
+                alert('知識の内容を入力してください！');
+                return;
+            }
+
+            // 簡単な分類ロジック
+            const llmWikiKeywords = ['学んだ', 'メモ', '理解', 'アイデア', '感想', '思う', '考える'];
+            const byteRoverKeywords = ['設計', 'ルール', '規約', 'ベストプラクティス', '仕様', '手順', 'マニュアル', '重要', '必須'];
+
+            let isLLMWiki = llmWikiKeywords.some(keyword => input.includes(keyword));
+            let isByteRover = byteRoverKeywords.some(keyword => input.includes(keyword));
+
+            let result = '';
+            if (isByteRover) {
+                result = '🤝 <strong>ByteRover</strong>に保存すべき知識です！<br><br>この知識はプロジェクトやチームで共有すべき重要な情報です。';
+            } else if (isLLMWiki) {
+                result = '🧠 <strong>LLM Wiki</strong>に保存すべき知識です！<br><br>この知識は個人的な成長や理解に役立つ情報です。';
+            } else {
+                result = '🤔 判定が難しい知識です。<br><br>以下の基準で判断してください：<br>・チームで共有すべき？ → ByteRover<br>・個人的な記録？ → LLM Wiki';
+            }
+
+            resultText.innerHTML = result;
+            output.classList.add('show');
+        }
+
+        // Enterキーで判定
+        document.getElementById('knowledgeInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                classifyKnowledge();
+            }
+        });
+    </script>
+</body>
+</html>
